@@ -1,4 +1,4 @@
 ai-forever/ruGPT-3.5-13B
-ai-forever/rugpt3large_based_on_gpt2
-ai-forever/rugpt3medium_based_on_gpt2
-ai-forever/rugpt3small_based_on_gpt2
+# ai-forever/rugpt3large_based_on_gpt2
+# ai-forever/rugpt3medium_based_on_gpt2
+# ai-forever/rugpt3small_based_on_gpt2

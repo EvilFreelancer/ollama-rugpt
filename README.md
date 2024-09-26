@@ -28,15 +28,20 @@ pip install -r requirements.txt
 make llama-quantize llama-cli
 ```
 
-Теперь поправим скрипт `llama.cpp/gguf-py/gguf/gguf_writer.py`, в нём нужно отключить защиту от дублирующихся названий слоёв:
+Теперь поправим скрипт `llama.cpp/gguf-py/gguf/gguf_writer.py`, в нём нужно отключить защиту от дублирующихся названий
+слоёв:
+
+> для ruGPT-3.5-13B это делать не требуется
 
 ```python
         # if any(name in tensors for tensors in self.tensors):
-            # raise ValueError(f'Duplicated tensor name {name!r}')
+# raise ValueError(f'Duplicated tensor name {name!r}')
 ```
 
 После этого потребуется в скрипте `llama.cpp/convert_hf_to_gguf.py` для модели gpt2 отключить поддержку претокенизации,
 для этого потребуется в функции `def _set_vocab_gpt2(self) -> None:` закомментировать строку:
+
+> для ruGPT-3.5-13B это делать не требуется
 
 ```python
 # self.gguf_writer.add_tokenizer_pre(tokpre)
@@ -51,7 +56,7 @@ models = [
     {"name": "rugpt3small_based_on_gpt2", "tokt": TOKENIZER_TYPE.BPE, "repo": "../rugpt3small_based_on_gpt2/orig"},
     {"name": "rugpt3medium_based_on_gpt2", "tokt": TOKENIZER_TYPE.BPE, "repo": "../rugpt3medium_based_on_gpt2/orig"},
     {"name": "rugpt3large_based_on_gpt2", "tokt": TOKENIZER_TYPE.BPE, "repo": "../rugpt3large_based_on_gpt2/orig"},
-    {"name": "ruGPT-3.5-13B", "tokt": TOKENIZER_TYPE.BPE, "repo": "../ruGPT-3.5-13B"},
+    {"name": "ruGPT-3.5-13B", "tokt": TOKENIZER_TYPE.BPE, "repo": "../ruGPT-3.5-13B/orig"},
 ]
 ```
 
@@ -68,13 +73,14 @@ cat ../models.txt | grep -v '^#' | \
 while read repo_id; do
     folder=$(echo $repo_id | awk -F\/ '{print $2}')
     python3 convert_hf_to_gguf.py --outtype=f16 --outfile="../$folder/model-fp16.gguf" "../$folder/orig"
-    # ./llama-quantize "../$folder/model-fp16.gguf" "../$folder/model-q4_0.gguf" Q4_0
-    # ./llama-quantize "../$folder/model-fp16.gguf" "../$folder/model-q5_0.gguf" Q5_0
+    ./llama-quantize "../$folder/model-fp16.gguf" "../$folder/model-q4_0.gguf" Q4_0
+    ./llama-quantize "../$folder/model-fp16.gguf" "../$folder/model-q5_0.gguf" Q5_0
     ./llama-quantize "../$folder/model-fp16.gguf" "../$folder/model-q8_0.gguf" Q8_0
 done
 ```
 
-> Занятный факт, `ollama` не позволяет работать с моделями квантованными ниже чем q8_0.  
+> Занятный факт, `ollama` не позволяет работать с моделями типа gpt2 квантованными ниже чем q8_0, так что только
+> ruGPT-3.5 удалось конвертировать ниже.
 
 Теперь создадим серию `Modelfile`'ов для импорта в `ollama`:
 
